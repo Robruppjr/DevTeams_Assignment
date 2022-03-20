@@ -27,17 +27,15 @@ using System.Threading.Tasks;
                 "1. Add Developer to Database\n" +
                 "2. View All Developers\n" +
                 "3. View Developer by ID\n" +
-                "4. Update Developer Data\n" +
-                "5. Delete Developer Data\n" +
                 "-------------------------------\n" +
                 "== DevTeam Database ==\n" +
-                "6. Add DevTeam to Database\n" +
+                "4. Add DevTeam to Database\n" +
                 // Add/Remove Deveolper from team
                 // Add/Remove Multiple Deveolpers from a team
-                "7. View All DevTeams\n" +
-                "8. View DevTeam by ID\n" +
-                "9. Update DevTeam Data\n" +
-                "10. Delete DevTeam Data\n" +
+                "5. View All DevTeams\n" +
+                "6. View DevTeam by ID\n" +
+                "7. Update DevTeam Data\n" +
+                "8. Delete DevTeam Data\n" +
                 "-------------------------------\n" +
                 "00. Close Application");
 
@@ -55,28 +53,26 @@ using System.Threading.Tasks;
                         ViewDeveloperByID();
                         break;
                     case "4":
-                        UpdateDeveloperData();
-                        break;
-                    case "5":
-                        DeleteDeveloperData();
-                        break;
-                    case "6":
                         AddDevTeamToDatabase();
                         break;
-                    case "7":
+                    case "5":
                         ViewAllDevTeams();
                         break;
-                    case "8":
+                    case "6":
                         ViewDevTeamByID();
                         break;
-                    case "9":
+                    case "7":
                         UpdateDevTeamData();
                         break;
-                    case "10":
+                    case "8":
                         DeleteDevTeamData();
                         break;
                     case "00":
-                        CloseApplication();
+                        isRunning = CloseApplication();
+                        break;
+                        default:
+                        System.Console.WriteLine("Ivalid Selection");
+                        PressAnyKeyToContinue();
                         break;
                 }
             }
@@ -92,58 +88,346 @@ using System.Threading.Tasks;
 
     private void PressAnyKeyToContinue()
     {
-        System.Console.WriteLine("Press Any To Continue");
+        System.Console.WriteLine("Press Any Key To Continue");
         Console.ReadKey();
     }
 
     private void DeleteDevTeamData()
     {
-        throw new NotImplementedException();
+        Console.Clear();
+        System.Console.WriteLine("== DevTeam Removal Page ==");
+
+        var devTeams = _dTeamRepo.GetAllDevTeams();
+        foreach(DevTeam devTeam in devTeams)
+        {
+            DisplayDevTeamListing(devTeam);
+        }
+
+        try
+        {
+            System.Console.WriteLine("Please select a DevTeam by its ID: ");
+            var userInputSelectedDevTeam = int.Parse(Console.ReadLine());
+            bool isSuccesful = _dTeamRepo.DeleteDevTeamData(userInputSelectedDevTeam);
+            if(isSuccesful)
+            {
+                System.Console.WriteLine("DevTeam was Succesfully Deleted.");
+            }
+            else
+            {
+                System.Console.WriteLine("Store Failed to be Deleted.");
+            }
+        }
+
+        catch 
+        {
+            System.Console.WriteLine("Sorry, Ivalid Selection");
+        }
+
+        PressAnyKeyToContinue();
+    }
+
+    private void DisplayDevTeamListing(DevTeam devTeam)
+    {
+        System.Console.WriteLine($" DevTeam ID: {devTeam.ID}\n DevTeam Name: {devTeam.Name}\n" +
+        "-------------------------------------------------\n");
+
     }
 
     private void UpdateDevTeamData()
     {
-        throw new NotImplementedException();
+        Console.Clear();
+        var availDevTeams = _dTeamRepo.GetAllDevTeams();
+        foreach(var devTeam in availDevTeams)
+        {
+            DisplayDevTeamListing(devTeam);
+        }
+
+        System.Console.WriteLine("Please enter a valid DevTeam ID: ");
+        var userInputDevTeamID = int.Parse(Console.ReadLine());
+        var userSelectedDevTeam = _dTeamRepo.GetDevTeamByID(userInputDevTeamID);
+
+        if(userSelectedDevTeam != null)
+        {
+            Console.Clear();
+            var newDevTeam = new DevTeam();
+
+            var currentDeveloper = _dRepo.GetAllDevelopers();
+
+            System.Console.WriteLine("Please enter a DevTeam Name: ");
+            newDevTeam.Name = Console.ReadLine();
+
+            bool hasAssignedDeveloper = false;
+            while(!hasAssignedDeveloper)
+            {
+                System.Console.WriteLine("Do you want to add any Deveolpers? y/n");
+                var userInputHasDevelopers = Console.ReadLine();
+
+                if(userInputHasDevelopers == "Y".ToLower())
+                {
+                    foreach(var developer in currentDeveloper)
+                    {
+                        System.Console.WriteLine($"{developer.ID} {developer.FirstName} {developer.LastName} {developer.PluralSight}");
+                    }
+                    
+
+                    var userInputHasDevelopersSelection = int.Parse(Console.ReadLine());
+                    var selectedDeveloper = _dRepo.GetDeveloperByID(userInputHasDevelopersSelection);
+
+                    if(selectedDeveloper != null)
+                    {
+                        newDevTeam.Developers.Add(selectedDeveloper);
+                        currentDeveloper.Remove(selectedDeveloper);
+                    }
+                    else
+                    {
+                        System.Console.WriteLine($"Sorry, the developer with the ID: {userInputHasDevelopersSelection} doesn't exist.");
+                    }
+                }
+                else
+                {
+                    hasAssignedDeveloper = true;
+                }
+            }
+                var isSuccesful = _dTeamRepo.UpdateDevTeamData(userSelectedDevTeam.ID,newDevTeam);
+                if(isSuccesful)
+                {
+                    System.Console.WriteLine("SUCCESS!");
+                }
+                else
+                {
+                    System.Console.WriteLine("FAILURE!");
+                }
+        }
+        else
+        {
+            System.Console.WriteLine($"Sorry the DevTeam with the ID: {userInputDevTeamID} doesn't exist.");
+        }
+        PressAnyKeyToContinue();
     }
 
     private void ViewDevTeamByID()
     {
-        throw new NotImplementedException();
+        Console.Clear();
+        System.Console.WriteLine("=== DevTeam Details ===\n");
+
+        var devTeams = _dTeamRepo.GetAllDevTeams();
+        foreach(DevTeam devTeam in devTeams)
+        {
+            DisplayDevTeamListing(devTeam);
+        }
+
+        try
+        {
+            System.Console.WriteLine("Please select a DevTeam by its ID: ");
+            var userInputSelectedDevTeam = int.Parse(Console.ReadLine());
+            var selectedDevTeam = _dTeamRepo.GetDevTeamByID(userInputSelectedDevTeam);
+            if(selectedDevTeam != null)
+            {
+                DisplayDevTeamDetails(selectedDevTeam);
+            }
+            else
+            {
+                System.Console.WriteLine($"Sorry the selected DevTeam with the ID: {userInputSelectedDevTeam} dosen't exist. ");
+            }
+        }
+        catch
+        {
+            System.Console.WriteLine("Sorry, Invalid selection.");
+        }
+
+        PressAnyKeyToContinue();
     }
+
+    private void DisplayDevTeamDetails(DevTeam selectedDevTeam)
+    {
+        Console.Clear();
+        System.Console.WriteLine($"DevTeam ID: {selectedDevTeam.ID}\n" + 
+        $"DevTeam Name: {selectedDevTeam.Name}\n");
+
+        try
+        {
+            System.Console.WriteLine("-- Devolpers --");
+            if(selectedDevTeam.Developers.Count > 0 )
+            {
+                foreach(var developer in selectedDevTeam.Developers)
+                {
+                    DisplayDeveloperInfo(developer);
+                }
+            }
+            else
+            {
+                System.Console.WriteLine("There are no Developers");
+            }
+        }
+        catch
+        {
+            System.Console.WriteLine("Sorry, Invalid selection.");
+        }
+    }
+
 
     private void ViewAllDevTeams()
     {
-        throw new NotImplementedException();
+        Console.Clear();
+        System.Console.WriteLine("=== DevTeam Listing ===\n");
+        var devTeamInDb = _dTeamRepo.GetAllDevTeams();
+
+        foreach(var devTeam in devTeamInDb)
+        {
+            DisplayDevTeamListing(devTeam);
+        }
+        PressAnyKeyToContinue();
     }
 
     private void AddDevTeamToDatabase()
     {
-        throw new NotImplementedException();
+        Console.Clear();
+        var newDevTeam = new DevTeam();
+
+        var currentDeveloper = _dRepo.GetAllDevelopers();
+
+        System.Console.WriteLine("Please enter a DevTeam Name: ");
+            newDevTeam.Name = Console.ReadLine();
+
+            bool hasAssignedDeveloper = false;
+            while(!hasAssignedDeveloper)
+            {
+                System.Console.WriteLine("Do you want to add any Deveolpers? y/n");
+                var userInputHasDevelopers = Console.ReadLine();
+
+                if(userInputHasDevelopers == "Y".ToLower())
+                {
+                    foreach(var developer in currentDeveloper)
+                    {
+                        System.Console.WriteLine($"{developer.ID} {developer.FirstName} {developer.LastName} {developer.PluralSight}");
+                    }
+                    
+
+                    var userInputHasDevelopersSelection = int.Parse(Console.ReadLine());
+                    var selectedDeveloper = _dRepo.GetDeveloperByID(userInputHasDevelopersSelection);
+
+                    if(selectedDeveloper != null)
+                    {
+                        newDevTeam.Developers.Add(selectedDeveloper);
+                        currentDeveloper.Remove(selectedDeveloper);
+                    }
+                    else
+                    {
+                        System.Console.WriteLine($"Sorry, the developer with the ID: {userInputHasDevelopersSelection} doesn't exist.");
+                    }
+                }
+                else
+                {
+                    hasAssignedDeveloper = true;
+                }
+            }
+
+            bool isSuccesful = _dTeamRepo.AddDevTeamToDatabase(newDevTeam);
+            if(isSuccesful)
+            {
+                System.Console.WriteLine($"Store: {newDevTeam.Name} was Added to the Database.");
+            }
+            else
+            {
+                System.Console.WriteLine("Store was failed to be Added to the Database.");
+            }
+            PressAnyKeyToContinue();
     }
 
-    private void DeleteDeveloperData()
+    private void DisplayDeveloperInfo(Developer developer)
     {
-        throw new NotImplementedException();
-    }
-
-    private void UpdateDeveloperData()
-    {
-        throw new NotImplementedException();
+        System.Console.WriteLine($"Developer ID: {developer.ID}\n" +
+        $"Developer Name: {developer.FirstName} {developer.LastName}\n" +
+        $"PluralSight access: {developer.PluralSight}\n" +
+        "------------------------------\n");
     }
 
     private void ViewDeveloperByID()
     {
-        throw new NotImplementedException();
+        Console.Clear();
+        System.Console.WriteLine("=== Developer Detail Menu ===\n");
+        System.Console.WriteLine("Please enter a Developer ID: \n");
+        var userInputDeveloperID = int.Parse(Console.ReadLine());
+
+        var developer =  _dRepo.GetDeveloperByID(userInputDeveloperID);
+        try
+        {
+            if(developer != null)
+            {
+                DisplayDeveloperInfo(developer);
+            }
+            else
+            {
+                System.Console.WriteLine($"The Developer with the ID: {userInputDeveloperID} doesn't exist");
+            }
+        }
+        catch
+        {
+            System.Console.WriteLine("Sorry, Invalid selection.");
+        }
+        PressAnyKeyToContinue();
     }
 
     private void ViewAllDevelopers()
     {
-        throw new NotImplementedException();
+        Console.Clear();
+        List<Developer> developersInDb = _dRepo.GetAllDevelopers();
+
+        try
+        {
+            if(developersInDb.Count > 0)
+            {
+                foreach(Developer developer in developersInDb)
+                {
+                    DisplayDeveloperInfo(developer);
+                }
+            }
+            else
+            {
+                System.Console.WriteLine("There are no Developers.");
+            }
+        }
+        catch
+        {
+            System.Console.WriteLine("Sorry, Invalid selection.");
+        }
+        PressAnyKeyToContinue();
     }
 
     private void AddDeveloperToDatabase()
     {
-        throw new NotImplementedException();
+        Console.Clear();
+        var newDeveloper = new Developer();
+
+        try
+        {
+            System.Console.WriteLine("=== Developer Enlisting Form ===\n");
+
+            System.Console.WriteLine("Please enter a Developer First Name: ");
+            newDeveloper.FirstName = Console.ReadLine();
+
+            System.Console.WriteLine("Please enter a Developer Last Name: ");
+            newDeveloper.LastName = Console.ReadLine();
+
+            System.Console.WriteLine("Does this Developer have access to PluralSight (true/false):  ");
+            newDeveloper.PluralSight = Convert.ToBoolean(Console.ReadLine()); 
+
+            bool isSuccesful = _dRepo.AddDeveloperToDatabase(newDeveloper);
+            if(isSuccesful)
+            {
+                System.Console.WriteLine($"{newDeveloper.FirstName} - {newDeveloper.LastName} : PluralSight {newDeveloper.PluralSight} was added to the Database");
+            }
+            else
+            {
+                System.Console.WriteLine("Developer Failed to be Added to the Database.");
+            }
+        }
+        catch
+        {
+            System.Console.WriteLine("Sorry, Invalid selection.");
+        }
+
+        PressAnyKeyToContinue();
     }
 
     private void SeedData ()
